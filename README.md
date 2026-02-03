@@ -1,4 +1,4 @@
-# maczip2win
+# macZip4Win
 
 Finder の右クリックから、Windows で文字化けしにくい ZIP を作るための Automator クイックアクションです。
 
