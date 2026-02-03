@@ -20,6 +20,12 @@ for p in paths:
 
 base_name = os.path.splitext(os.path.basename(paths[0]))[0]
 zip_path = os.path.join(out_dir, f"{base_name}.zip")
+abs_zip_path = os.path.abspath(zip_path)
+
+for p in paths:
+    if os.path.abspath(p) == abs_zip_path:
+        print("出力先と同名のZIPが選択されています。別名で作成してください。", file=sys.stderr)
+        sys.exit(1)
 
 EXCLUDED_DIRS = {"__MACOSX", ".Spotlight-V100", ".Trashes"}
 EXCLUDED_FILES = {".DS_Store"}
@@ -40,13 +46,19 @@ def add_path(zf, path):
         return
     if os.path.isdir(path):
         for root, dirs, files in os.walk(path):
-            dirs[:] = [d for d in dirs if d not in EXCLUDED_DIRS]
+            dirs[:] = [d for d in dirs if not should_skip(os.path.join(root, d))]
+            added_file = False
             for name in files:
                 full = os.path.join(root, name)
                 if should_skip(full):
                     continue
                 rel = os.path.relpath(full, out_dir)
                 zf.write(full, rel)
+                added_file = True
+            if not dirs and not added_file:
+                rel_dir = os.path.relpath(root, out_dir)
+                if rel_dir != ".":
+                    zf.writestr(f"{rel_dir}/", "")
     else:
         rel = os.path.relpath(path, out_dir)
         zf.write(path, rel)
